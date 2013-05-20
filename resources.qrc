@@ -1,0 +1,33 @@
+<RCC>
+  <qresource prefix="icons" lang="default">
+    <file alias="quit">icons/System-log-out.svg</file>
+    <file alias="selectall">icons/Gnome-edit-select-all.svg</file>
+    <file alias="cut">icons/Gnome-edit-cut.svg</file>
+    <file alias="paste">icons/Gnome-edit-paste.svg</file>
+    <file alias="copy">icons/Gnome-edit-copy.svg</file>
+    <file alias="user">icons/Contact-new.svg</file>
+    <file alias="open">icons/document-open.svg</file>
+    <file alias="pointingarrow">icons/pointing-arrow.svg</file>
+    <file alias="bitcoin2">icons/bitcoin2.svg</file>
+    <file alias="cookie2">icons/preferences-web-browser-cookies2.svg</file>
+    <file alias="flattr2">icons/flattr2.svg</file>
+    <file alias="flattr">icons/flattr.svg</file>
+    <file alias="paypal">icons/paypal.svg</file>
+    <file alias="cookie-monster">icons/free_cookie_monster_icon_by_triggerdog-d5k1jvr.png</file>
+    <file alias="bitcoin">icons/bitcoin.svg</file>
+    <file alias="cookie">icons/preferences-web-browser-cookies.svg</file>
+    <file alias="graph">icons/office-chart-area-stacked.svg</file>
+    <file alias="calculator">icons/Accessories-calculator.svg</file>
+    <file alias="error">icons/Dialog-error.svg</file>
+    <file alias="clear">icons/Edit-clear.svg</file>
+    <file alias="warning">icons/Gnome-dialog-warning.svg</file>
+    <file alias="open2">icons/Gnome-document-open.svg</file>
+    <file alias="save">icons/Gnome-document-save.svg</file>
+    <file alias="download">icons/Gnome-emblem-downloads.svg</file>
+    <file alias="favorite">icons/Gnome-emblem-favorite.svg</file>
+    <file alias="monkey">icons/Gnome-face-monkey.svg</file>
+    <file alias="settings">icons/Gnome-preferences-system.svg</file>
+    <file alias="web">icons/Gnome-web-browser.svg</file>
+    <file alias="locale">icons/Preferences-desktop-locale.svg</file>
+  </qresource>
+</RCC>
