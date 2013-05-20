@@ -80,12 +80,14 @@ class MainWindow(QtGui.QMainWindow, Ui_PSSOptimisationMainWindow):
         """
         self.start_here.show()
         self.grades_table.hide()
+        self.stats.hide()
 
     def showTable(self):
         """Call this when the table has been filled with data."""
         self.start_here.hide()
         self.grades_table.show()
         self.grades_table.resizeColumnsToContents()
+        self.stats.show()
 
     def showGraph(self):
         pass

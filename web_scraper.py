@@ -99,7 +99,7 @@ def getSubjectsFromHTML(html):
             continue
         tds = tr.find_all("td")
         # fill the text from the data cells into subjects
-        subject = Subject(*[i.text.strip() for i in tds])
+        subject = Subject(*([True]+[i.text.strip() for i in tds]))
         subject.grade = strToFloat(subject.grade) if subject.grade else None
         subject.credits = strToFloat(subject.credits) if subject.credits else None
         subjects.append(subject)

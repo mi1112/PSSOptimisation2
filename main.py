@@ -45,6 +45,10 @@ class PSSOptimisation():
             SIGNAL("triggered()"), self.openDonationDialog)
         self.main_window.connect(self.main_window.action_open,
             SIGNAL("triggered()"), self.openFileDialog)
+        self.main_window.connect(self.grades,
+            SIGNAL("dataChanged()"), self.updateStats)
+        self.main_window.connect(self.grades,
+            SIGNAL("modelReset()"), self.updateStats)
 
         # automatically download new grades
         if self.settings.value("updateOnStart", False).toBool():
@@ -85,6 +89,8 @@ class PSSOptimisation():
             self.main_window.setEnabled(True)
             self.main_window.showProgress(-1)
         self.main_window.showTable()
+        #self.updateStats()
+
         self.main_window.setEnabled(True)
         if remember:
             self.saveLoginData(username, password)
@@ -134,11 +140,20 @@ class PSSOptimisation():
         if html_file:
             html = codecs.open(html_file, encoding='utf-8')
             self.grades.getFromHTML(html)
+            #self.updateStats()
             self.main_window.showTable()
 
     def openDonationDialog(self):
         dp = DonationDialog(self.main_window)
         dp.exec_()
+
+    def updateStats(self):
+        self.main_window.num_of_grades.setText(str(
+            self.grades.getNumOfGrades()))
+        self.main_window.num_of_credits.setText(str(
+            self.grades.getNumOfCredits()))
+        self.main_window.average_grade.setText(str(
+            self.grades.getAverageGrade()))
 
 def main():
     app = QtGui.QApplication(sys.argv)

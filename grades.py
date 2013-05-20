@@ -1,15 +1,16 @@
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import SIGNAL
 
 import web_scraper
 from collections import namedtuple
 from namedlist import namedlist
 
 Subject = namedlist("Subject",
-    ["nr", "name", "req", "exam_type", "semester", "grade",
+    ["active", "nr", "name", "req", "exam_type", "semester", "grade",
     "status", "credits", "note", "attempt", "date"])
 
 # TODO: translate
-Subject.header = ["Nr", "Name", "Req", "Exam type", "Semester", "Grade",
+Subject.header = ["", "Nr", "Name", "Req", "Exam type", "Semester", "Grade",
     "Status", "Credits", "Note", "Attempt", "Date"]
 
 class Grades(QtCore.QAbstractTableModel):
@@ -17,7 +18,6 @@ class Grades(QtCore.QAbstractTableModel):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
         self.headerdata = Subject.header
         self.subjects = []
-        self.active = []
 
     def getFromPSSOIterator(self, username, password):
         """Get grades from PSSO and feed them to the table model.
@@ -35,8 +35,6 @@ class Grades(QtCore.QAbstractTableModel):
         subjects = web_scraper.getSubjectsFromHTML(html)
         self.beginResetModel()
         self.subjects = subjects
-        # TODO: get this from settings
-        self.active = [True] * len(subjects)
         self.endResetModel()
         yield "Done"
         # TODO: update number of rows
@@ -49,7 +47,6 @@ class Grades(QtCore.QAbstractTableModel):
         subjects = web_scraper.getSubjectsFromHTML(html)
         self.beginResetModel()
         self.subjects = subjects
-        self.active = [True] * len(subjects)
         self.endResetModel()
         # TODO: update number of rows
 
@@ -57,7 +54,7 @@ class Grades(QtCore.QAbstractTableModel):
     	return len(self.subjects)
 
     def columnCount(self, parent):
-    	return len(self.headerdata) + 1
+    	return len(self.headerdata)
 
     def data(self, index, role):
         row, col = index.row(), index.column()
@@ -67,20 +64,17 @@ class Grades(QtCore.QAbstractTableModel):
             if col == 0:
                 return
             else:
-                return self.subjects[row][col-1]
+                return self.subjects[row][col]
         elif role == QtCore.Qt.CheckStateRole:
             if col == 0:
-                if self.active[row]:
+                if self.subjects[row].active:
                     return QtCore.Qt.Checked
                 else:
                     return QtCore.Qt.Unchecked
 
     def headerData(self, index, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            if index == 0:
-                return
-            else:
-                return self.headerdata[index-1]
+            return self.headerdata[index]
 
     def flags(self, index):
         if index.column() == 0:
@@ -96,11 +90,32 @@ class Grades(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.CheckStateRole:
             row, col = index.row(), index.column()
             if col == 0:
-                old = self.active[row]
+                old = self.subjects[row].active
                 new = True if value == QtCore.Qt.Checked else False
                 if old != new:
-                    self.active[row] = new
-                    
+                    self.subjects[row].active = new
+                    self.emit(SIGNAL("dataChanged()"))
+                    return True
+        return False
 
+    def getNumOfGrades(self):
+        """Return the number of grades that are marked as active/real."""
+        return sum(i.active for i in self.subjects if i.grade and i.credits)
 
-        return True
+    def getNumOfCredits(self):
+        """Return the number of credits earned so far. Only active subjects are
+        counted.
+        """
+        return sum(float(i.credits) for i in self.subjects if i.active)
+
+    def getAverageGrade(self):
+        """Return the average grade. Only active subjects are counted.
+        The result is rounded by two digits after comma.
+        """
+        grades_x_credits = 0
+        num_credits = 0
+        for subj in self.subjects:
+            if subj.active and subj.grade and subj.credits:
+                grades_x_credits += (subj.grade * subj.credits)
+                num_credits += subj.credits
+        return round(grades_x_credits / num_credits, 2)
