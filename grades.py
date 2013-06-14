@@ -1,3 +1,5 @@
+from datetime import date
+
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import SIGNAL
 
@@ -10,13 +12,47 @@ Subject = namedlist("Subject",
     "status", "credits", "note", "attempt", "date"])
 
 # TODO: translate
-Subject.header = ["", "Nr", "Name", "Req", "Exam type", "Semester", "Grade",
+Subject.header = ["Count", "Nr", "Name", "Req", "Exam type", "Semester", "Grade",
     "Status", "Credits", "Note", "Attempt", "Date"]
 
-class Grades(QtCore.QAbstractTableModel):
+#Subject.visibility = [True, False, True, False, False, False, True,
+#    False, True, False, False, False]
+
+
+class GradesModelProxy(QtGui.QSortFilterProxyModel):
+    """This proxy offers column visibility toggling and filtering the data
+    from GradesModel.
+    """
+    def __init__(self, parent=None):
+        QtGui.QSortFilterProxyModel.__init__(self, parent)
+        self.col_visibility = [True, False, True, False, False, False, True,
+            False, True, False, False, False]
+
+    def showColumn(self, col_index):
+        self.col_visibility[col_index] = True
+        self.filterChanged()
+
+    def hideColumn(self, col_index):
+        self.col_visibility[col_index] = False
+        self.filterChanged()
+
+    def toggleColumn(self, col_index):
+        self.col_visibility[col_index] = not self.col_visibility[col_index]
+        self.filterChanged()
+
+    def filterAcceptsColumn(self, column, parent):
+        return self.col_visibility[column]
+
+    def filterAcceptsRow(self, row, parent):
+        # TODO: implement filters
+        return True
+
+
+class GradesModel(QtCore.QAbstractTableModel):
+    """A model for grades from the PSSO."""
     def __init__(self, parent=None, *args):
         QtCore.QAbstractTableModel.__init__(self, parent, *args)
-        self.headerdata = Subject.header
+        self.header_data = Subject.header
         self.subjects = []
 
     def getFromPSSOIterator(self, username, password):
@@ -37,7 +73,6 @@ class Grades(QtCore.QAbstractTableModel):
         self.subjects = subjects
         self.endResetModel()
         yield "Done"
-        # TODO: update number of rows
 
     def getFromPSSO(self, username, password):
         """Get grades from PSSO and feed them to the table model."""
@@ -48,50 +83,40 @@ class Grades(QtCore.QAbstractTableModel):
         self.beginResetModel()
         self.subjects = subjects
         self.endResetModel()
-        # TODO: update number of rows
 
     def rowCount(self, parent):
     	return len(self.subjects)
 
     def columnCount(self, parent):
-    	return len(self.headerdata)
+    	return len(self.header_data)
 
     def data(self, index, role):
         row, col = index.row(), index.column()
         if not index.isValid():
             return QtCore.QVariant()
         if role == QtCore.Qt.DisplayRole:
-            if col == 0:
-                return
-            else:
-                return self.subjects[row][col]
-        elif role == QtCore.Qt.CheckStateRole:
-            if col == 0:
-                if self.subjects[row].active:
-                    return QtCore.Qt.Checked
-                else:
-                    return QtCore.Qt.Unchecked
+            v = QtCore.QVariant(self.subjects[row][col])
+            if isinstance(self.subjects[row][col], date):
+                v = QtCore.QVariant(QtCore.QDate(self.subjects[row][col]))
+            return v
 
     def headerData(self, index, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-            return self.headerdata[index]
+            return self.header_data[index]
 
     def flags(self, index):
         if index.column() == 0:
-            return (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
+            return (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
         else:
-            return (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-                #QtCore.Qt.ItemIsEditable)
+            return QtCore.Qt.ItemIsEnabled
+            
 
     def setData(self, index, value, role):
-        #if role == QtCore.Qt.EditRole:
-            # TODO: make custom entries editable?
-        #    pass
-        if role == QtCore.Qt.CheckStateRole:
+        if role == QtCore.Qt.EditRole:
             row, col = index.row(), index.column()
             if col == 0:
                 old = self.subjects[row].active
-                new = True if value == QtCore.Qt.Checked else False
+                new = value.toBool()
                 if old != new:
                     self.subjects[row].active = new
                     self.emit(SIGNAL("dataChanged()"))

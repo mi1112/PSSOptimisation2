@@ -10,7 +10,13 @@ class MainWindow(QtGui.QMainWindow, Ui_PSSOptimisationMainWindow):
     def __init__(self, first_start=True):
         QtGui.QMainWindow.__init__(self)
         self.setupUi(self)
-        self.connectUI()
+
+        # TODO: rethink the copy'n'paste stuff
+        self.menu_edit.removeAction(self.action_copy)
+        self.menu_edit.removeAction(self.action_paste)
+        self.menu_edit.removeAction(self.action_cut)
+        self.menu_edit.removeAction(self.action_select_all)
+
         self.setupShortcuts()
         self.setupStatusTips()
         self.setupProgressBar()
@@ -27,21 +33,6 @@ class MainWindow(QtGui.QMainWindow, Ui_PSSOptimisationMainWindow):
         cp = QtGui.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-
-    def tell(self, *args):
-        print "here"
-        print args
-
-    def connectUI(self):
-        # Set up a nice context menu for the grades table header
-        header = self.grades_table.horizontalHeader()
-        header.connect(header, SIGNAL("customContextMenuRequested()"),
-            self.tell)
-
-        #header.headerData(section, QtGui.Qt.Horizontal)
-        #header_menu = QtGui.QMenu(header)
-        header.setContextMenuPolicy(
-            QtCore.Qt.CustomContextMenu)
 
     def setupShortcuts(self):
         """Since the Qt Designer can't assign default shortcuts,

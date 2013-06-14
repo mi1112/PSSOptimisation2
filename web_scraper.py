@@ -1,8 +1,8 @@
 # encoding: utf-8
 import sys
-import urlparse
 import urllib
 import re
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 
@@ -102,6 +102,7 @@ def getSubjectsFromHTML(html):
         subject = Subject(*([True]+[i.text.strip() for i in tds]))
         subject.grade = strToFloat(subject.grade) if subject.grade else None
         subject.credits = strToFloat(subject.credits) if subject.credits else None
+        subject.date = strToDate(subject.date) if subject.date else None
         subjects.append(subject)
     return subjects
 
@@ -130,6 +131,10 @@ def checkServiceUnavailable(html):
 def strToFloat(string):
     """Convert a string to float. European notation supported."""
     return float(string.strip().replace(',', '.'))
+
+def strToDate(string):
+    """Convert a string in form of dd.mm.yy into a python date object."""
+    return datetime.strptime(string, "%d.%m.%Y").date()
 
 def getLinkByName(html, name):
     soup = BeautifulSoup(html)

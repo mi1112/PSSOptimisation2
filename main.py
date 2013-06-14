@@ -14,7 +14,9 @@ from PyQt4.QtCore import SIGNAL, SLOT
 
 from login_dialog import LoginDialog
 from donation_dialog import DonationDialog
-from grades import Grades
+from openfile_dialog import OpenFileDialog
+from grades import GradesModel, GradesModelProxy
+from checkbox_delegate import CheckBoxDelegate
 from web_scraper import ParsingError, LoginError, ConnectionError
 from web_scraper import ServiceUnavailableError
 from main_window import MainWindow
@@ -29,7 +31,9 @@ class PSSOptimisation():
 
         self.settings = QtCore.QSettings()
         self.main_window = MainWindow(True)
-        self.grades = Grades(self.main_window)
+        self.grades_model = GradesModel(self.main_window)
+        self.proxy_model = GradesModelProxy()
+        self.proxy_model.setSourceModel(self.grades_model)
         self.initUI()
 
     def initUI(self):
@@ -37,7 +41,9 @@ class PSSOptimisation():
         self.main_window.show()
 
     def connectUI(self):
-        self.main_window.grades_table.setModel(self.grades)
+        self.main_window.grades_table.setModel(self.proxy_model)
+        delegate = CheckBoxDelegate()
+        self.main_window.grades_table.setItemDelegate(delegate)
 
         self.main_window.connect(self.main_window.action_download,
             SIGNAL("triggered()"), self.openLoginDialog)
@@ -45,10 +51,31 @@ class PSSOptimisation():
             SIGNAL("triggered()"), self.openDonationDialog)
         self.main_window.connect(self.main_window.action_open,
             SIGNAL("triggered()"), self.openFileDialog)
-        self.main_window.connect(self.grades,
+        self.main_window.connect(self.grades_model,
             SIGNAL("dataChanged()"), self.updateStats)
-        self.main_window.connect(self.grades,
+        self.main_window.connect(self.grades_model,
             SIGNAL("modelReset()"), self.updateStats)
+
+        header = self.main_window.grades_table.horizontalHeader()
+        #self.proxy_model.headerData(section, QtGui.Qt.Horizontal)
+        self.header_actions = QtGui.QActionGroup(header)
+        self.header_actions.setExclusive(False)
+        for nr, (name, visible) in enumerate(zip(
+            self.grades_model.header_data,
+            self.proxy_model.col_visibility)):
+
+            action = self.header_actions.addAction(name)
+            action.setCheckable(True)
+            action.setChecked(visible)
+            action.connect(action, SIGNAL("triggered()"),
+                lambda nr=nr: self.proxy_model.toggleColumn(nr))
+        header.addActions(self.header_actions.actions())
+        header.setContextMenuPolicy(
+            QtCore.Qt.ActionsContextMenu)
+
+        self.main_window.menu_table_columns.clear()
+        for action in self.header_actions.actions():
+            self.main_window.menu_table_columns.addAction(action)
 
         # automatically download new grades
         if self.settings.value("updateOnStart", False).toBool():
@@ -65,12 +92,17 @@ class PSSOptimisation():
                 self.handleLoginData(username, password, remember)
 
     def handleLoginData(self, username, password, remember=False):
+        """Try to load the grades by using the provided login credentials.
+        On failure, an error popup is displayed. On success a loading progress
+        bar and after that a table is shown.
+        If "remember" is True, then the login data is saved.
+        """
         self.main_window.setDisabled(True)
         QtGui.QApplication.processEvents()
         QtGui.QApplication.processEvents()
         progress = 0
         try:
-            iterator = self.grades.getFromPSSOIterator(username, password)
+            iterator = self.grades_model.getFromPSSOIterator(username, password)
             for step in iterator:
                 self.main_window.showProgress(progress, step)
                 # getFromPSSOIterator defines 8 steps, but 1st is at 0
@@ -89,12 +121,13 @@ class PSSOptimisation():
             self.main_window.setEnabled(True)
             self.main_window.showProgress(-1)
         self.main_window.showTable()
-        #self.updateStats()
+        self.main_window.grades_table.resizeColumnsToContents()
+        self.main_window.grades_table.updateGeometries()
+        
 
         self.main_window.setEnabled(True)
         if remember:
             self.saveLoginData(username, password)
-
 
     def saveLoginData(self, username, password):
         assert username and password
@@ -134,14 +167,20 @@ class PSSOptimisation():
             self.handleLoginData(u, p)
 
     def openFileDialog(self):
-        html_file = QtGui.QFileDialog.getOpenFileName(None,
-            u"Choose an HTML file", filter="HTML-Datei (*.html *.htm)")
-        html_file = unicode(html_file)
-        if html_file:
-            html = codecs.open(html_file, encoding='utf-8')
-            self.grades.getFromHTML(html)
-            #self.updateStats()
+        ofd = OpenFileDialog(self.main_window)
+        ofd.exec_()
+        if ofd.html_file:
+            try:
+                html = codecs.open(ofd.html_file, encoding='utf-8')
+            except IOError:
+                QtGui.QMessageBox.warning(self.main_window, "File not found",
+                    "Sorry, but there seems to be no file called {}.".format(
+                        ofd.html_file))
+                return
+            self.grades_model.getFromHTML(html)
             self.main_window.showTable()
+            self.main_window.grades_table.resizeColumnsToContents()
+            self.main_window.grades_table.updateGeometries()
 
     def openDonationDialog(self):
         dp = DonationDialog(self.main_window)
@@ -149,11 +188,11 @@ class PSSOptimisation():
 
     def updateStats(self):
         self.main_window.num_of_grades.setText(str(
-            self.grades.getNumOfGrades()))
+            self.grades_model.getNumOfGrades()))
         self.main_window.num_of_credits.setText(str(
-            self.grades.getNumOfCredits()))
+            self.grades_model.getNumOfCredits()))
         self.main_window.average_grade.setText(str(
-            self.grades.getAverageGrade()))
+            self.grades_model.getAverageGrade()))
 
 def main():
     app = QtGui.QApplication(sys.argv)
