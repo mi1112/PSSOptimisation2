@@ -168,8 +168,8 @@ class PSSOptimisation():
 
     def openFileDialog(self):
         ofd = OpenFileDialog(self.main_window)
-        ofd.exec_()
-        if ofd.html_file:
+        accepted = ofd.exec_()
+        if accepted and ofd.html_file:
             try:
                 html = codecs.open(ofd.html_file, encoding='utf-8')
             except IOError:

@@ -11,6 +11,7 @@ class OpenFileDialog(QtGui.QDialog, Ui_OpenFileDialog):
         QtGui.QDialog.__init__(self, parent=parent)
         self.setupUi(self)
         self.connectUI()
+        self.skip_popup = False
 
     @property
     def html_file(self):
@@ -21,8 +22,10 @@ class OpenFileDialog(QtGui.QDialog, Ui_OpenFileDialog):
             self.chooseFile)
 
         def choseFileIfNonechosen(e):
-            if not str(self.file_path.text()):
+            self.skip_popup = False
+            if not str(self.file_path.text()) and not self.skip_popup:
                 self.chooseFile()
+                self.file_path.clearFocus()
             else:
                 return QtGui.QLineEdit.focusInEvent(self.file_path, e)
         self.file_path.focusInEvent = choseFileIfNonechosen
@@ -32,4 +35,6 @@ class OpenFileDialog(QtGui.QDialog, Ui_OpenFileDialog):
             u"Choose an HTML file", filter="HTML-Datei (*.html *.htm)")
         if html_file:
             self.file_path.setText(unicode(html_file))
+        # if nothing was selected (e.g. form cancelled), prevent reopening
+        self.skip_popup = not bool(html_file)
     
