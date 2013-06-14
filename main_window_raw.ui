@@ -299,7 +299,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="action_paste"/>
     <addaction name="action_select_all"/>
    </widget>
-   <widget class="QMenu" name="menuView">
+   <widget class="QMenu" name="menu_view">
     <property name="title">
      <string>View</string>
     </property>
@@ -315,7 +315,7 @@ p, li { white-space: pre-wrap; }
    </widget>
    <addaction name="menu_file"/>
    <addaction name="menu_edit"/>
-   <addaction name="menuView"/>
+   <addaction name="menu_view"/>
    <addaction name="menu_help"/>
   </widget>
   <widget class="QStatusBar" name="status_bar"/>

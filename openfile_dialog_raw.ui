@@ -22,11 +22,7 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QLineEdit" name="file_path">
-     <property name="readOnly">
-      <bool>true</bool>
-     </property>
-    </widget>
+    <widget class="QLineEdit" name="file_path"/>
    </item>
    <item row="1" column="1">
     <widget class="QPushButton" name="browse_button">
@@ -73,6 +69,12 @@ p, li { white-space: pre-wrap; }
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>browse_button</tabstop>
+  <tabstop>button_box</tabstop>
+  <tabstop>description</tabstop>
+  <tabstop>file_path</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

@@ -123,7 +123,6 @@ class PSSOptimisation():
         self.main_window.showTable()
         self.main_window.grades_table.resizeColumnsToContents()
         self.main_window.grades_table.updateGeometries()
-        
 
         self.main_window.setEnabled(True)
         if remember:
