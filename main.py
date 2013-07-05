@@ -34,19 +34,20 @@ class PSSOptimisation():
         self.grades_model = GradesModel(self.main_window)
         self.proxy_model = GradesModelProxy()
         self.proxy_model.setSourceModel(self.grades_model)
-        self.initUI()
-        tray = QtGui.QSystemTrayIcon(self.main_window)
-        tray.setIcon(QtGui.QIcon("icons/Accessories-calculator.svg"))
-        tray.connect(tray,
-            SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),
-            self.trayClicked)
-        tray.show()
-        self.tray = tray
 
-    def trayClicked(self, reason):
-        print reason
-        if reason == QtGui.QSystemTrayIcon.DoubleClick:
-            self.main_window.setVisible(not self.main_window.isVisible())
+        self.initUI()
+        # tray = QtGui.QSystemTrayIcon(self.main_window)
+        # tray.setIcon(QtGui.QIcon("icons/Accessories-calculator.svg"))
+        # tray.connect(tray,
+        #     SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),
+        #     self.trayClicked)
+        # tray.show()
+        # self.tray = tray
+
+    # def trayClicked(self, reason):
+    #     print reason
+    #     if reason == QtGui.QSystemTrayIcon.DoubleClick:
+    #         self.main_window.setVisible(not self.main_window.isVisible())
 
     def initUI(self):
         self.connectUI()
@@ -133,8 +134,8 @@ class PSSOptimisation():
             self.main_window.setEnabled(True)
             self.main_window.showProgress(-1)
         self.main_window.showTable()
-        self.main_window.grades_table.resizeColumnsToContents()
-        self.main_window.grades_table.updateGeometries()
+        #self.main_window.grades_table.resizeColumnsToContents()
+        #self.main_window.grades_table.updateGeometries()
 
         self.main_window.setEnabled(True)
         if remember:
@@ -190,8 +191,6 @@ class PSSOptimisation():
                 return
             self.grades_model.getFromHTML(html)
             self.main_window.showTable()
-            self.main_window.grades_table.resizeColumnsToContents()
-            self.main_window.grades_table.updateGeometries()
 
     def openDonationDialog(self):
         dp = DonationDialog(self.main_window)
@@ -204,16 +203,27 @@ class PSSOptimisation():
             self.grades_model.getNumOfCredits()))
         self.main_window.average_grade.setText(str(
             self.grades_model.getAverageGrade()))
+        print self.main_window.grades_table.columnWidth(3)
+        self.main_window.grades_table.resizeColumnsToContents()
+        self.main_window.grades_table.updateGeometries()
+        self.main_window.grades_table.updateGeometry()
+        self.main_window.grades_table.updateEditorGeometries()
+        print self.main_window.grades_table.columnWidth(3)
+        self.main_window.grades_table.resizeColumnsToContents()
+        self.main_window.grades_table.updateGeometries()
+        self.main_window.grades_table.updateGeometry()
+        self.main_window.grades_table.updateEditorGeometries()
+        print self.main_window.grades_table.columnWidth(3)
 
 def main():
     app = QtGui.QApplication(sys.argv)
 
-    translator = QtCore.QTranslator()
-    translator.load("de.qm", ".")
+    #translator = QtCore.QTranslator()
+    #translator.load("de.qm", ".")
     # enable
-    app.installTranslator(translator)
+    #app.installTranslator(translator)
     # disable
-    app.removeTranslator(translator)
+    #app.removeTranslator(translator)
 
     ex = PSSOptimisation()
     sys.exit(app.exec_())
