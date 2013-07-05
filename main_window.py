@@ -12,10 +12,11 @@ class MainWindow(QtGui.QMainWindow, Ui_PSSOptimisationMainWindow):
         self.setupUi(self)
 
         # TODO: rethink the copy'n'paste stuff
-        self.menu_edit.removeAction(self.action_copy)
-        self.menu_edit.removeAction(self.action_paste)
-        self.menu_edit.removeAction(self.action_cut)
-        self.menu_edit.removeAction(self.action_select_all)
+        # self.menu_edit.removeAction(self.action_copy)
+        # self.menu_edit.removeAction(self.action_paste)
+        # self.menu_edit.removeAction(self.action_cut)
+        # self.menu_edit.removeAction(self.action_select_all)
+        self.menu_edit.setEnabled(False)
 
         self.setupShortcuts()
         self.setupStatusTips()
