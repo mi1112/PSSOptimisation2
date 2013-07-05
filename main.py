@@ -35,6 +35,18 @@ class PSSOptimisation():
         self.proxy_model = GradesModelProxy()
         self.proxy_model.setSourceModel(self.grades_model)
         self.initUI()
+        tray = QtGui.QSystemTrayIcon(self.main_window)
+        tray.setIcon(QtGui.QIcon("icons/Accessories-calculator.svg"))
+        tray.connect(tray,
+            SIGNAL("activated(QSystemTrayIcon::ActivationReason)"),
+            self.trayClicked)
+        tray.show()
+        self.tray = tray
+
+    def trayClicked(self, reason):
+        print reason
+        if reason == QtGui.QSystemTrayIcon.DoubleClick:
+            self.main_window.setVisible(not self.main_window.isVisible())
 
     def initUI(self):
         self.connectUI()
@@ -195,6 +207,14 @@ class PSSOptimisation():
 
 def main():
     app = QtGui.QApplication(sys.argv)
+
+    translator = QtCore.QTranslator()
+    translator.load("de.qm", ".")
+    # enable
+    app.installTranslator(translator)
+    # disable
+    app.removeTranslator(translator)
+
     ex = PSSOptimisation()
     sys.exit(app.exec_())
 
