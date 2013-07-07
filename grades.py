@@ -27,18 +27,22 @@ class GradesModelProxy(QtGui.QSortFilterProxyModel):
         QtGui.QSortFilterProxyModel.__init__(self, parent)
         self.col_visibility = [True, False, True, False, False, False, True,
             False, True, False, False, False]
+        self.setDynamicSortFilter(True)
 
     def showColumn(self, col_index):
         self.col_visibility[col_index] = True
-        self.filterChanged()
+        self.invalidateFilter()
+        self.emit(SIGNAL("columnsVisibilityChanged()"))
 
     def hideColumn(self, col_index):
         self.col_visibility[col_index] = False
-        self.filterChanged()
+        self.invalidateFilter()
+        self.emit(SIGNAL("columnsVisibilityChanged()"))
 
     def toggleColumn(self, col_index):
         self.col_visibility[col_index] = not self.col_visibility[col_index]
-        self.filterChanged()
+        self.invalidateFilter()
+        self.emit(SIGNAL("columnsVisibilityChanged()"))
 
     def filterAcceptsColumn(self, column, parent):
         return self.col_visibility[column]
@@ -92,13 +96,12 @@ class GradesModel(QtCore.QAbstractTableModel):
 
     def data(self, index, role):
         row, col = index.row(), index.column()
-        if not index.isValid():
-            return QtCore.QVariant()
-        if role == QtCore.Qt.DisplayRole:
+        if index.isValid() and role == QtCore.Qt.DisplayRole:
             v = QtCore.QVariant(self.subjects[row][col])
             if isinstance(self.subjects[row][col], date):
                 v = QtCore.QVariant(QtCore.QDate(self.subjects[row][col]))
             return v
+        return QtCore.QVariant()
 
     def headerData(self, index, orientation, role):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
@@ -109,7 +112,6 @@ class GradesModel(QtCore.QAbstractTableModel):
             return (QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
         else:
             return QtCore.Qt.ItemIsEnabled
-            
 
     def setData(self, index, value, role):
         if role == QtCore.Qt.EditRole:

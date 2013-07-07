@@ -23,7 +23,7 @@ from main_window import MainWindow
 
 VERSION = 0.9
 
-class PSSOptimisation():
+class PSSOptimisation(object):
     def __init__(self):
         QtCore.QCoreApplication.setApplicationName("PSSOptimisation")
         QtCore.QCoreApplication.setApplicationVersion(str(VERSION))
@@ -53,6 +53,16 @@ class PSSOptimisation():
         self.connectUI()
         self.main_window.show()
 
+    def __columnsChanged(self):
+        """This should be called whenever the columns filter is changed.
+        It's a workaround for a bug in the headerview not updating the columns
+        properly on filter change.
+        """
+        header = self.main_window.grades_table.horizontalHeader()
+        header.resizeSections(QtGui.QHeaderView.ResizeToContents)
+        header.resizeSection(0, header.sectionSize(0)-1)
+        header.resizeSection(0, header.sectionSize(0)+1)
+
     def connectUI(self):
         self.main_window.grades_table.setModel(self.proxy_model)
         delegate = CheckBoxDelegate()
@@ -67,30 +77,43 @@ class PSSOptimisation():
         self.main_window.connect(self.grades_model,
             SIGNAL("dataChanged()"), self.updateStats)
         self.main_window.connect(self.grades_model,
+            SIGNAL("dataChanged()"),
+            self.main_window.grades_table.resizeColumnsToContents)
+        self.main_window.connect(self.grades_model,
             SIGNAL("modelReset()"), self.updateStats)
-
+        self.main_window.connect(self.grades_model,
+            SIGNAL("modelReset()"),
+            self.main_window.grades_table.resizeColumnsToContents)
+        
+        # workaround for buggy headerview
+        self.main_window.connect(self.proxy_model,
+            SIGNAL("columnsVisibilityChanged()"),
+            self.__columnsChanged)
+        
+        # create actions for toggling table columns
         header = self.main_window.grades_table.horizontalHeader()
-        #self.proxy_model.headerData(section, QtGui.Qt.Horizontal)
         self.header_actions = QtGui.QActionGroup(header)
         self.header_actions.setExclusive(False)
         for nr, (name, visible) in enumerate(zip(
-            self.grades_model.header_data,
-            self.proxy_model.col_visibility)):
-
+                self.grades_model.header_data,
+                self.proxy_model.col_visibility)):
             action = self.header_actions.addAction(name)
             action.setCheckable(True)
             action.setChecked(visible)
             action.connect(action, SIGNAL("triggered()"),
                 lambda nr=nr: self.proxy_model.toggleColumn(nr))
+
+        # add that menu as context menu for the header
         header.addActions(self.header_actions.actions())
         header.setContextMenuPolicy(
             QtCore.Qt.ActionsContextMenu)
 
+        # and put it into the main window's menus
         self.main_window.menu_table_columns.clear()
         for action in self.header_actions.actions():
             self.main_window.menu_table_columns.addAction(action)
 
-        # automatically download new grades
+        # automatically download new grades (depends on settings)
         if self.settings.value("updateOnStart", False).toBool():
             QtCore.QTimer.singleShot(200, self.tryAutoDownloadFromPSSO)
     
@@ -133,11 +156,10 @@ class PSSOptimisation():
         finally:
             self.main_window.setEnabled(True)
             self.main_window.showProgress(-1)
+        
         self.main_window.showTable()
-        #self.main_window.grades_table.resizeColumnsToContents()
-        #self.main_window.grades_table.updateGeometries()
-
         self.main_window.setEnabled(True)
+
         if remember:
             self.saveLoginData(username, password)
 
@@ -203,17 +225,6 @@ class PSSOptimisation():
             self.grades_model.getNumOfCredits()))
         self.main_window.average_grade.setText(str(
             self.grades_model.getAverageGrade()))
-        print self.main_window.grades_table.columnWidth(3)
-        self.main_window.grades_table.resizeColumnsToContents()
-        self.main_window.grades_table.updateGeometries()
-        self.main_window.grades_table.updateGeometry()
-        self.main_window.grades_table.updateEditorGeometries()
-        print self.main_window.grades_table.columnWidth(3)
-        self.main_window.grades_table.resizeColumnsToContents()
-        self.main_window.grades_table.updateGeometries()
-        self.main_window.grades_table.updateGeometry()
-        self.main_window.grades_table.updateEditorGeometries()
-        print self.main_window.grades_table.columnWidth(3)
 
 def main():
     app = QtGui.QApplication(sys.argv)
