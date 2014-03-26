@@ -7,3 +7,5 @@ Dependencies
 PyQt 4
 BeautifulSoup 4
 keyring
+
+:)
